@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Piñata de Taco - Premios Exclusivos</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            background: #0f172a;
+            color: white;
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            overflow: hidden;
+            user-select: none;
+            touch-action: manipulation;
+        }
+        .pantalla {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.98);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .oculto { display: none !important; }
+        #menu-principal {
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .tarjeta-juego {
+            background: #1e293b;
+            border: 3px solid #334155;
+            border-radius: 15px;
+            padding: 25px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+            max-width: 280px;
+            width: 100%;
+        }
+        .tarjeta-juego.completado {
+            background: #064e3b;
+            border-color: #059669;
+            opacity: 0.7;
+            cursor: default;
+        }
+        .contenedor-pinata {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #0f172a;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 90;
+            padding: 20px 0;
+            box-sizing: border-box;
+        }
+        .panel-superior {
+            width: 100%;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 12px 10px;
+            background: rgba(15, 23, 42, 0.9);
+            box-sizing: border-box;
+            border-bottom: 3px solid #334155;
+            font-size: 15px;
+            font-weight: bold;
+        }
+        .caja-info {
+            background: #334155;
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: 2px solid #475569;
+        }
+        /* Zona de la piñata de taco */
+        .zona-taco {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            width: 100%;
+        }
+        #taco-pinata {
+            font-size: 100px;
+            cursor: pointer;
+            transition: transform 0.08s ease;
+            filter: drop-shadow(0 10px 15px rgba(0,0,0,0.6));
+            margin-bottom: 20px;
+        }
+        #taco-pinata:active {
+            transform: scale(0.85) rotate(-8deg);
+        }
+        @keyframes sacudida {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            20% { transform: translate(-10px, 5px) rotate(-10deg); }
+            40% { transform: translate(10px, -5px) rotate(10deg); }
+            60% { transform: translate(-8px, 3px) rotate(-5deg); }
+            80% { transform: translate(8px, -3px) rotate(5deg); }
+            100% { transform: translate(0, 0) rotate(0deg); }
+        .sacudir {
+            animation: sacudida 0.25s ease;
+        }
+        .barra-progreso-contenedor {
+            width: 80%;
+            max-width: 280px;
+            height: 18px;
+            background: #1e293b;
+            border: 3px solid #334155;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 15px;
+        }
+        #barra-progreso {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, #f59e0b, #ef4444);
+            transition: width 0.1s ease;
+        }
+        .btn-accion-principal {
+            background: linear-gradient(135deg, #10b981, #047857);
+            color: white;
+            border: none;
+            padding: 14px 25px;
+            font-weight: bold;
+            font-size: 16px;
+            border-radius: 10px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- MENÚ PRINCIPAL -->
+    <div id="menu-principal">
+        <h1 style="color: #38bdf8; margin-bottom: 5px; font-size: 22px;">🌮 Piñata de Taco</h1>
+        <p style="color: #cbd5e1; font-size: 13px; margin-bottom: 20px; text-align: center; padding: 0 10px;">¡Golpea el taco 30 veces para romperlo y ganar un premio exclusivo! Solo un intento.</p>
+        <div class="tarjeta-juego" id="tarjeta-pinata" onclick="verificarYComenzar()">
+            <div style="font-size:38px; margin-bottom:8px;">🌮</div>
+            <div style="font-size:15px; font-weight:bold; color:white;">Romper Piñata de Taco</div>
+            <div id="estado-pinata" style="font-size:12px; color:#cbd5e1; margin-top:8px; font-weight:bold;">▶️ Jugar Ahora</div>
+        </div>
+    </div>
+
+    <!-- MINIJUEGO PIÑATA DE TACO -->
+    <div id="mg-pinata" class="contenedor-pinata oculto">
+        <div class="panel-superior">
+            <div class="caja-info">💥 Golpes: <span id="contador-golpes">30</span>/30</div>
+        </div>
+
+        <div class="zona-taco">
+            <div id="taco-mensaje" style="font-size: 15px; font-weight: bold; color: #cbd5e1; margin-bottom: 20px; text-align: center; padding: 0 15px;">¡Toca el taco rápidamente para romperlo!</div>
+            
+            <div id="taco-pinata" onclick="golpearTaco()">🌮</div>
+
+            <div class="barra-progreso-contenedor">
+                <div id="barra-progreso"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PANTALLA DE RESULTADO FINAL -->
+    <div id="pantalla-resultado" class="pantalla oculto">
+        <div style="background: #1e293b; border: 3px solid #334155; border-radius: 20px; padding: 25px; max-width: 300px; width: 100%; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
+            <h1 style="color: #38bdf8; font-size: 20px; margin-top: 0;">🎉 ¡Piñata Rota!</h1>
+            <p style="color: #cbd5e1; font-size: 13px; margin-bottom: 15px;">¡Has conseguido romper el taco con éxito!</p>
+            
+            <div style="background: #0f172a; border: 2px solid #334155; border-radius: 12px; padding: 15px; margin-bottom: 20px;">
+                <div style="font-size: 13px; color: #94a3b8;">Premio obtenido:</div>
+                <div id="resultado-premio-texto" style="font-size: 18px; font-weight: bold; color: #f59e0b; margin-top: 8px;">🎁 Premio</div>
+            </div>
+
+            <button class="btn-accion-principal" onclick="location.reload()">Aceptar y Salir</button>
+        </div>
+    </div>
+
+    <script>
+        const CLAVE_PINATA_TACO = 'feria_pinata_taco_jugado';
+        let datosPinata = JSON.parse(localStorage.getItem(CLAVE_PINATA_TACO)) || {
+            completado: false,
+            premioObtenido: ''
+        };
+
+        // Si ya se jugó, bloquear desde el menú
+        if (datosPinata.completado) {
+            let tarjeta = document.getElementById('tarjeta-pinata');
+            tarjeta.className = 'tarjeta-juego completado';
+            document.getElementById('estado-pinata').innerText = '✅ Ya jugado';
+            tarjeta.onclick = null;
+        }
+
+        function verificarYComenzar() {
+            if (datosPinata.completado) return;
+            document.getElementById('menu-principal').style.display = 'none';
+            document.getElementById('mg-pinata').classList.remove('oculto');
+            reiniciarPinata();
+        }
+
+        const PREMIOS_TACO = [
+            "Huevo de Admin Abuse",
+            "Huevo Cristal",
+            "3 Huevos Jubilados",
+            "Regalo de Admin Abuse",
+            "Caja Sorpresa"
+        ];
+
+        let golpesRestantes = 30;
+
+        function reiniciarPinata() {
+            golpesRestantes = 30;
+            document.getElementById('contador-golpes').innerText = "30";
+            document.getElementById('barra-progreso').style.width = "100%";
+        }
+
+        function golpearTaco() {
+            if (golpesRestantes <= 0) return;
+
+            golpesRestantes--;
+            document.getElementById('contador-golpes').innerText = golpesRestantes;
+
+            // Actualizar barra de progreso (porcentaje de 30 golpes)
+            let porcentaje = (golpesRestantes / 30) * 100;
+            document.getElementById('barra-progreso').style.width = porcentaje + "%";
+
+            // Efecto visual de sacudida
+            let taco = document.getElementById('taco-pinata');
+            taco.classList.remove('sacudir');
+            void taco.offsetWidth; // Forzar reflow
+            taco.classList.add('sacudir');
+
+            if (golpesRestantes <= 0) {
+                taco.onclick = null;
+                setTimeout(() => {
+                    romperPinataFinal();
+                }, 400);
+            }
+        }
+
+        function romperPinataFinal() {
+            // Seleccionar un premio aleatorio con la misma probabilidad (1 de 5)
+            let indiceAleatorio = Math.floor(Math.random() * PREMIOS_TACO.length);
+            let premioElegido = PREMIOS_TACO[indiceAleatorio];
+
+            // Guardar estado en localStorage
+            datosPinata.completado = true;
+            datosPinata.premioObtenido = premioElegido;
+            localStorage.setItem(CLAVE_PINATA_TACO, JSON.stringify(datosPinata));
+
+            // Mostrar pantalla de resultado
+            document.getElementById('mg-pinata').classList.add('oculto');
+            document.getElementById('resultado-premio-texto').innerText = premioElegido;
+            document.getElementById('pantalla-resultado').classList.remove('oculto');
+        }
+    </script>
+</body>
+  </html>
+  
